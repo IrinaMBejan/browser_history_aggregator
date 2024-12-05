@@ -135,6 +135,39 @@ def fetch_firefox_history() -> List[Dict]:
             history.append({"url": url, "visit_time": visit_time})
     return history
 
+def fetch_brave_history() -> List[Dict]:
+    db_paths = {
+        "Darwin": os.path.expanduser("~/Library/Application Support/BraveSoftware/Brave-Browser/Default/History"),
+        "Linux": os.path.expanduser("~/.config/BraveSoftware/Brave-Browser/Default/History")
+    }
+
+    brave_profile_path = db_paths.get(platform.system())
+    if not brave_profile_path or not os.path.exists(brave_profile_path):
+        print("brave profile directory not found.")
+        return []
+
+    # Copying is necessary because databases are locked
+    # Copies are intentionally outside syftbox, but we can process them locally
+    temp_db_path = Path("~/.tmp/brave_places.sqlite").expanduser()
+    shutil.copy(brave_profile_path, temp_db_path)
+    
+    conn = sqlite3.connect(temp_db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT url,last_visit_time FROM urls ORDER BY last_visit_time DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    ""
+    temp_db_path.unlink(missing_ok=True)
+    history = []
+    print(rows)
+    for data in rows:
+        (url, visit_time) = data 
+        visit_time = datetime(1601, 1, 1) + timedelta(microseconds=visit_time)
+        history.append({"url": url, "visit_time": visit_time})
+    return history
+
 
 if __name__ == "__main__":
     # where to store temporary history db copies
@@ -153,9 +186,15 @@ if __name__ == "__main__":
     firefox_history = fetch_firefox_history()
     print(f"Firefox history: {len(firefox_history)} items")
 
+
+    print("\nFetching Brave history...")
+    brave_history = fetch_brave_history()
+    print(f"Brave history: {len(brave_history)} items")
+
     print("\nSafari sample history:", safari_history[:5])
     print("Chrome sample history:", chrome_history[:5])
     print("Firefox sample history:", firefox_history[:5])
+    print("Brave sample history:", brave_history[:5])
 
     if temp_folder.exists() and temp_folder.is_dir():
             shutil.rmtree(temp_folder)
