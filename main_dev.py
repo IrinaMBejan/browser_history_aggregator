@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import platform
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from syftbox.lib import Client
 from typing import List, Dict, Tuple
 import shutil
@@ -14,13 +14,14 @@ API_NAME = "browser_history"
 
 def hamming_distance_between_hashes(user_hashes:Dict[str,List[str]]) -> Dict[Tuple[str,str],float]:
     """
-    Calculate the Hamming distance between each pair of values (lists of strings) in a dictionary.
+    Calculate the Hamming distance between each pair of values in a dictionary and return JSON-compatible output.
     
     Parameters:
         user_hashes (dict): A dictionary where keys are IDs and values are lists of strings.
     
     Returns:
-        dict: A dictionary where keys are tuple pairs of IDs and values are their Hamming distances.
+        dict: A dictionary where each key is an ID, and the value is a list of Hamming distances 
+              to other IDs in the same order as the keys.
     """
     def calculate_hamming(str1, str2):
         """Calculate Hamming distance between two strings of equal length."""
@@ -28,27 +29,34 @@ def hamming_distance_between_hashes(user_hashes:Dict[str,List[str]]) -> Dict[Tup
             raise ValueError("Strings must be of equal length for Hamming distance.")
         return sum(ch1 != ch2 for ch1, ch2 in zip(str1, str2))
 
-    keys = list(user_hashes.keys())
-    n = len(keys)
+    ids = list(user_hashes.keys())
+    n = len(ids)
 
     if n < 2:
         raise ValueError("There must be at least two entries to compare.")
 
     # Ensure all lists in the dictionary have the same length
-    first_length = len(user_hashes[keys[0]])
+    first_length = len(user_hashes[ids[0]])
     for key, lst in user_hashes.items():
         if len(lst) != first_length:
             raise ValueError("All lists in the dictionary must have the same number of strings.")
 
-    # Calculate Hamming distance for each pair of IDs
-    result = {}
+    # Initialize result dictionary
+    result = {id_: [] for id_ in ids}
+
+    # Calculate Hamming distances
     for i in range(n):
-        for j in range(i + 1, n):
-            id1, id2 = keys[i], keys[j]
-            hamming_distance = 0
-            for str1, str2 in zip(user_hashes[id1], user_hashes[id2]):
-                hamming_distance += calculate_hamming(str1, str2)
-            result[(id1, id2)] = hamming_distance
+        id1 = ids[i]
+        for j in range(n):
+            id2 = ids[j]
+            if i == j:
+                # Distance to itself is 0
+                result[id1].append(0)
+            else:
+                hamming_distance = 0
+                for str1, str2 in zip(user_hashes[id1], user_hashes[id2]):
+                    hamming_distance += calculate_hamming(str1, str2)
+                result[id1].append(hamming_distance)
 
     return result
 
@@ -112,7 +120,7 @@ def is_updated(timestamp: str) -> bool:
 
 def get_score_from_browser_history_hashes(
     datasites_path: Path, peers: list[str]
-) -> Tuple[List[str], List[List[str]]]:
+) -> Tuple[Dict[str,List[str]], List[List[str]]]:
     """
     Calculates the similarity across a network of peers.
 
@@ -121,15 +129,9 @@ def get_score_from_browser_history_hashes(
         peers (list[str]): A list of peer directory names.
 
     Returns:
-        float: The mean CPU usage of the peers whose data is available and updated.
-               Returns -1 if no data is available or no peers have been updated recently.
+        hamming_distance: Hamming distance between peers
 
-    Example:
-        If `datasites_path` is "/datasites" and the list of peers is ["peer1", "peer2"],
-        this function will attempt to read CPU usage data from files located at:
-        - "/datasites/peer1/api_data/browser_history/browser_history.json"
-        - "/datasites/peer2/api_data/browser_history/browser_history.json"
-        It then computes the average CPU usage for peers with valid and updated data.
+        
     """
     # Initialize variables for aggregated similarity and peer count
     user_hashes = {}
@@ -165,6 +167,10 @@ def get_score_from_browser_history_hashes(
 
     # Return the calculated mean CPU usage or -1 if no data is available
     return hamming_distance, active_peers
+
+# TODO
+# def truncate_file(file_path: Path, max_items: int, new_sample: float, peers: list[str]):
+    
 
 def copy_html_files(source: Path, destination: Path):
     """
