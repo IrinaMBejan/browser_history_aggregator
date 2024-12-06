@@ -1,1 +1,7 @@
 /logs
+.env
+logs/
+__pycache__/
+node_modules
+script_timestamps/browser_history_agg_last_run
+script_timestamps/browser_history_last_run
