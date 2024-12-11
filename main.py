@@ -14,51 +14,54 @@ API_NAME = "browser_history"
 OUT_NAME = "browser_history_agg"
 
 
-def compare_users_exact_match(users_domains: Dict[str, List[str]]) -> List[Tuple[str, str, float, Set[str]]]:
+def compare_users_exact_match(
+    users_domains: Dict[str, List[str]],
+) -> List[Tuple[str, str, float, Set[str]]]:
     """
     Compare users based on exact domain matches.
-    
+
     Args:
         users_domains: Dictionary mapping user IDs to their domain lists
-        
+
     Returns:
         List of tuples (user1, user2, similarity_score, common_domains)
         where similarity_score is percentage of shared domains
     """
     matches = DefaultDict(list)
     users = list(users_domains.keys())
-    
+
     for i in range(len(users)):
         for j in range(i + 1, len(users)):
             user1, user2 = users[i], users[j]
-            
+
             domains1 = set(users_domains[user1])
             domains2 = set(users_domains[user2])
-            
+
             common_domains = domains1 & domains2
-            
+
             # Calculate similarity as percentage of shared domains
             total_unique_domains = len(domains1 | domains2)
             if total_unique_domains > 0:
                 similarity = len(common_domains) / total_unique_domains
-                if similarity > 0:  
+                if similarity > 0:
                     matches[user1].append((user2, similarity))
                     matches[user2].append((user1, similarity))
-    
+
     for user, _ in matches.items():
         matches[user].sort(key=lambda x: x[1], reverse=True)
 
     return matches
 
+
 # def hamming_distance_between_hashes(user_hashes:Dict[str,List[str]]) -> Dict[Tuple[str,str],float]:
 #     """
 #     Calculate the Hamming distance between each pair of values in a dictionary and return JSON-compatible output.
-    
+
 #     Parameters:
 #         user_hashes (dict): A dictionary where keys are IDs and values are lists of strings.
-    
+
 #     Returns:
-#         dict: A dictionary where each key is an ID, and the value is a list of Hamming distances 
+#         dict: A dictionary where each key is an ID, and the value is a list of Hamming distances
 #               to other IDs in the same order as the keys.
 #     """
 #     def calculate_hamming(str1, str2):
@@ -130,9 +133,10 @@ def network_participants(datasite_path: Path):
     # Return the list of user directories
     return users
 
+
 def get_score_from_browser_history_hashes(
     datasites_path: Path, peers: list[str]
-) -> Tuple[Dict[str,List[str]], List[List[str]]]:
+) -> Tuple[Dict[str, List[str]], List[List[str]]]:
     """
     Calculates the similarity across a network of peers.
 
@@ -148,7 +152,7 @@ def get_score_from_browser_history_hashes(
 
     for peer in peers:
         tracker_file: Path = (
-            datasites_path / peer / "api_data" / "browser_history" / "browser_history_enc.json"
+            datasites_path / peer / "api_data" / API_NAME / "browser_history_enc.json"
         )
         if not tracker_file.exists():
             continue
@@ -169,15 +173,17 @@ def get_score_from_browser_history_hashes(
 
     return similarity_matrix, active_peers
 
+
 def get_top_domains(
     datasites_path: Path, peers: list[str], count: int
-) -> List[str]:
+) -> Tuple[Dict[str, int], List[List[str]]]:
     """
-    Calculates the most viewed domains 
+    Calculates the most viewed domains
 
     Args:
         datasites_path (Path): The path to the directory containing data for all peers.
         peers (list[str]): A list of peer directory names.
+        count: (int): The number of top domains to return.
 
     Returns:
         domains: list of domains
@@ -197,12 +203,67 @@ def get_top_domains(
                 peer_data = json.load(json_file)
             except json.JSONDecodeError:
                 continue
-    
+
         all_domains.extend(peer_data["browser_history"])
         active_peers.append(peer)
 
     domain_counts = Counter(all_domains)
     return domain_counts.most_common(count), active_peers
+
+
+def get_top_papers(
+    datasites_path: Path, peers: list[str], count: int
+) -> Tuple[Dict[str, int], List[List[str]]]:
+    """
+    Calculates the top 10 most papers read.
+
+    Args:
+        datasites_path (Path): The path to the directory containing data for all peers.
+        peers (list[str]): A list of peer directory names.
+        count: (int): The number of top domains to return.
+
+    Returns:
+        domains: list of domains
+    """
+    active_peers = []
+    all_domains = []
+
+    for peer in peers:
+        tracker_file: Path = (
+            datasites_path
+            / peer
+            / "api_data"
+            / "browser_history"
+            / "browser_history_enc.json"
+        )
+        if not tracker_file.exists():
+            continue
+
+        with open(str(tracker_file), "r") as json_file:
+            try:
+                peer_data = json.load(json_file)
+            except json.JSONDecodeError:
+                continue
+
+    for peer in peers:
+        tracker_file: Path = (
+            datasites_path / peer / "api_data" / API_NAME / "paper_stats.json"
+        )
+        if not tracker_file.exists():
+            continue
+
+        with open(str(tracker_file), "r") as json_file:
+            try:
+                peer_data = json.load(json_file)
+            except json.JSONDecodeError:
+                continue
+
+        all_domains.extend(peer_data["papers"])
+        active_peers.append(peer)
+
+    domain_counts = Counter(all_domains)
+    return domain_counts.most_common(count), active_peers
+
 
 def copy_html_files(source: Path, destination: Path):
     """
@@ -255,7 +316,7 @@ if __name__ == "__main__":
     if not should_run():
         print(f"Skipping {API_NAME}, not enough time has passed.")
         exit(0)
-        
+
     client = Client.load()
 
     # For adding UI files
@@ -265,17 +326,48 @@ if __name__ == "__main__":
 
     peers = network_participants(client.datasite_path.parent)
 
-    similarity, active_peers = get_score_from_browser_history_hashes(client.datasite_path.parent, peers)
-    top_domains, active_peers = get_top_domains(client.datasite_path.parent, peers, count = 5)
+    similarity, active_peers = get_score_from_browser_history_hashes(
+        client.datasite_path.parent, peers
+    )
+    top_domains, active_peers = get_top_domains(
+        client.datasite_path.parent, peers, count=5
+    )
+    top_papers, active_peers = get_top_papers(
+        client.datasite_path.parent, peers, count=10
+    )
 
-    output_similarity = client.datasite_path / "public" / OUT_NAME / "outputs" / "output_similarity.json"
+    output_similarity = (
+        client.datasite_path
+        / "public"
+        / OUT_NAME
+        / "outputs"
+        / "output_similarity.json"
+    )
     with open(output_similarity, "w") as f:
         json.dump(similarity, f)
 
-    output_most_domains = client.datasite_path / "public" / OUT_NAME / "outputs" / "output_most_viewed_domains.json"
+    output_most_domains = (
+        client.datasite_path
+        / "public"
+        / OUT_NAME
+        / "outputs"
+        / "output_most_viewed_domains.json"
+    )
     with open(output_most_domains, "w") as f:
         json.dump(top_domains, f)
 
-    output_peers = client.datasite_path / "public" / OUT_NAME / "outputs" / "output_peers.json"
+    output_peers = (
+        client.datasite_path / "public" / OUT_NAME / "outputs" / "output_peers.json"
+    )
     with open(output_peers, "w") as f:
         json.dump(active_peers, f)
+
+    output_top_papers = (
+        client.datasite_path
+        / "public"
+        / OUT_NAME
+        / "outputs"
+        / "output_top_papers.json"
+    )
+    with open(output_top_papers, "w") as f:
+        json.dump(top_papers, f)
