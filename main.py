@@ -152,7 +152,11 @@ def get_score_from_browser_history_hashes(
 
     for peer in peers:
         tracker_file: Path = (
-            datasites_path / peer / "api_data" / API_NAME / "browser_history_enc.json"
+            datasites_path
+            / peer
+            / "api_data"
+            / "browser_history"
+            / "browser_history_enc.json"
         )
         if not tracker_file.exists():
             continue
@@ -177,6 +181,7 @@ def get_score_from_browser_history_hashes(
 def get_top_domains(
     datasites_path: Path, peers: list[str], count: int
 ) -> Tuple[Dict[str, int], List[List[str]]]:
+
     """
     Calculates the most viewed domains
 
