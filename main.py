@@ -178,13 +178,17 @@ def get_score_from_browser_history_hashes(
     return similarity_matrix, active_peers
 
 
-def get_top_domains(datasites_path: Path, peers: list[str], count: int) -> List[str]:
+def get_top_domains(
+    datasites_path: Path, peers: list[str], count: int
+) -> Tuple[Dict[str, int], List[List[str]]]:
+
     """
     Calculates the most viewed domains
 
     Args:
         datasites_path (Path): The path to the directory containing data for all peers.
         peers (list[str]): A list of peer directory names.
+        count: (int): The number of top domains to return.
 
     Returns:
         domains: list of domains
@@ -206,6 +210,60 @@ def get_top_domains(datasites_path: Path, peers: list[str], count: int) -> List[
                 continue
 
         all_domains.extend(peer_data["browser_history"])
+        active_peers.append(peer)
+
+    domain_counts = Counter(all_domains)
+    return domain_counts.most_common(count), active_peers
+
+
+def get_top_papers(
+    datasites_path: Path, peers: list[str], count: int
+) -> Tuple[Dict[str, int], List[List[str]]]:
+    """
+    Calculates the top 10 most papers read.
+
+    Args:
+        datasites_path (Path): The path to the directory containing data for all peers.
+        peers (list[str]): A list of peer directory names.
+        count: (int): The number of top domains to return.
+
+    Returns:
+        domains: list of domains
+    """
+    active_peers = []
+    all_domains = []
+
+    for peer in peers:
+        tracker_file: Path = (
+            datasites_path
+            / peer
+            / "api_data"
+            / "browser_history"
+            / "browser_history_enc.json"
+        )
+        if not tracker_file.exists():
+            continue
+
+        with open(str(tracker_file), "r") as json_file:
+            try:
+                peer_data = json.load(json_file)
+            except json.JSONDecodeError:
+                continue
+
+    for peer in peers:
+        tracker_file: Path = (
+            datasites_path / peer / "api_data" / API_NAME / "paper_stats.json"
+        )
+        if not tracker_file.exists():
+            continue
+
+        with open(str(tracker_file), "r") as json_file:
+            try:
+                peer_data = json.load(json_file)
+            except json.JSONDecodeError:
+                continue
+
+        all_domains.extend(peer_data["papers"])
         active_peers.append(peer)
 
     domain_counts = Counter(all_domains)
@@ -279,6 +337,9 @@ if __name__ == "__main__":
     top_domains, active_peers = get_top_domains(
         client.datasite_path.parent, peers, count=5
     )
+    top_papers, active_peers = get_top_papers(
+        client.datasite_path.parent, peers, count=10
+    )
 
     output_similarity = (
         client.datasite_path
@@ -305,3 +366,13 @@ if __name__ == "__main__":
     )
     with open(output_peers, "w") as f:
         json.dump(active_peers, f)
+
+    output_top_papers = (
+        client.datasite_path
+        / "public"
+        / OUT_NAME
+        / "outputs"
+        / "output_top_papers.json"
+    )
+    with open(output_top_papers, "w") as f:
+        json.dump(top_papers, f)
