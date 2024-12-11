@@ -6,7 +6,7 @@ Browser History Aggregator [SyftBox](https://github.com/OpenMined/syft) API.
 ## Aggregating Results with `browser_history_aggregator`
 This app is part of the Browser History Federated Learning WorkFlow. It is the aggregator app that computes the final results by aggregating private information from all the clients.
 
-### Summary of the Browser History Federated Learning WorkFlow
+**Summary of the Browser History Federated Learning WorkFlow**
 The [`browser_history_member`](https://github.com/VivekSil/browser_history_member) app writes intermediary outputs to a folder where only the aggregator has access. The aggregator app, [`browser_history_aggregator`](https://github.com/IrinaMBejan/browser_history_aggregator), computes the aggregating results and pushes them to a file where they can be used by the static website.
 
 ## Usage
@@ -28,6 +28,7 @@ git clone https://github.com/IrinaMBejan/browser_history_aggregator
 ```
 
 **3. Run the app [only for Aggregator role]**
+
 Copy the app to the SyftBox data directory:
 ```bash
 cp -r ./browser_history_aggregator <SYFTBOX_DATADIR>/apis/  # default: ~/SyftBox
@@ -36,10 +37,11 @@ cp -r ./browser_history_aggregator <SYFTBOX_DATADIR>/apis/  # default: ~/SyftBox
 > [!NOTE]
 > `<SYFTBOX_DATADIR>` refers to the SyftBox data directory, according to your SyftBox installation (default: `$HOME/SyftBox`).
 
-Run the SyftBox environment:
+Run the SyftBox client:
 ```bash
-curl -LsSf https://syftbox.openmined.org/install.sh | sh
+syftbox client
 ```
+If you have not already installed SyftBox, follow instructions [here](https://syftbox.openmined.org).
 
 Then, after the installation is complete and the SyftBox environment you should be able to see the app running:
 ```bash
@@ -60,22 +62,20 @@ The `server_url` depends on which the server the client is running on.
 ### Example
 Visit our [Browser History Aggregator Test](https://syftbox.openmined.org/datasites/irina@openmined.org/browser_history_agg/)!
 
-### Find Your Learning Mate
-Join the Browser History Community as a client!
-Follow the instructions and installations here!
+### Find Your Learning Mate ✨ 
+Join the **Browser History Community** as a client -> Follow the instructions and installations [here](https://github.com/VivekSil/browser_history_member)!
 Then go to the [Browser History Aggregator Test](https://syftbox.openmined.org/datasites/irina@openmined.org/browser_history_agg/) and type yout email in the textbox at the bottom to *Find Your Learning Mate*!
 Get in touch with your learning mate and start learning together!
 
 ## Features
-- macOS
-- Linux
-- Windows
+- macOS :white_check_mark:
+- Linux :heavy_check_mark:
+- Windows :question:
 
 ### Requirements
-It requires giving to Terminal "Full Disk Access" (if you read the code, you will see why). 
-
-SyftBox is required to run the app.
+- It requires giving to Terminal "Full Disk Access" (if you read the code, you will see why). 
+- SyftBox is required to run the app.
 
 ### Prerequisites
-- python 3.8+
-- syftbox
+- python 3.8+ 
+- [syftbox](https://syftbox.openmined.org)
