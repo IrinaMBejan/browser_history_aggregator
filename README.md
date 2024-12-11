@@ -4,18 +4,14 @@
 Browser History Aggregator [SyftBox](https://github.com/OpenMined/syft) API.
 
 ## Aggregating Results with `browser_history_aggregator`
+This app is part of the Browser History Federated Learning WorkFlow. It is the aggregator app that computes the final results by aggregating private information from all the clients.
 
-The [`browser_history_member`](https://github.com/VivekSil/browser_history_member) app writes intermediary outputs to a folder where only the aggregator has access. The aggregator app, [`browser_history_aggregator`](https://github.com/IrinaMBejan/browser_history_aggregator), computes the final results and pushes them to a file where they can be used by the static website.
+### Summary of the Browser History Federated Learning WorkFlow
+The [`browser_history_member`](https://github.com/VivekSil/browser_history_member) app writes intermediary outputs to a folder where only the aggregator has access. The aggregator app, [`browser_history_aggregator`](https://github.com/IrinaMBejan/browser_history_aggregator), computes the aggregating results and pushes them to a file where they can be used by the static website.
 
 ## Usage
 
-**1. Clone the API**
-
-```bash
-git clone https://github.com/IrinaMBejan/browser_history_aggregator
-```
-
-**2. Agree on roles in the Browser History Federated Learning WorkFlow**
+**1. Agree on roles in the Browser History Federated Learning WorkFlow**
 
 Aggregator: `<aggregator@email.com>`; 
 Clients: `<client1@email.com>`,`<client2@email.com>`
@@ -25,6 +21,11 @@ Details:
 - Only the Aggregator must install and run the `browser_history_aggregator` app.
 - Clients have to install and run the [`browser_history_member`](https://github.com/VivekSil/browser_history_member) app (please read the README of the app for more details).
 
+**2. Clone the API [only for Aggregator role]**
+
+```bash
+git clone https://github.com/IrinaMBejan/browser_history_aggregator
+```
 
 **3. Run the app [only for Aggregator role]**
 Copy the app to the SyftBox data directory:
