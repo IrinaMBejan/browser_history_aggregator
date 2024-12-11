@@ -68,6 +68,8 @@ Then go to the [Browser History Aggregator Test](https://syftbox.openmined.org/d
 Get in touch with your learning mate and start learning together!
 
 ## Features
+
+### OS
 - macOS :white_check_mark:
 - Linux :heavy_check_mark:
 - Windows :question:
