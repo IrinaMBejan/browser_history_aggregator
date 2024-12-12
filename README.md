@@ -43,17 +43,16 @@ syftbox client
 ```
 If you have not already installed SyftBox, follow instructions [here](https://syftbox.openmined.org).
 
-Then, after the installation is complete and the SyftBox environment you should be able to see the app running:
+Then, after the installation is complete and the SyftBox environment is running, you should be able to see the app running:
 ```bash
 Running browser_history with ... at '...'
 ```
 - The aggregator app will write the final results by aggregating private information from all the clients, to a file in the specified output directory: `<SYFTBOX_DATADIR>/datasites/<aggregator_email>/public/browser_history_agg/outputs`.
 - These results can then be used by the static website to render the view at `<SYFTBOX_DATADIR>/datasites/<aggregator_email>/public/browser_history_agg/index.html`.
 
-**4. Monitoring the FL experiment**
+**4. Monitoring the Browser History FL experiment**
 
-- Visit the aggregator's dashboard to monitor the FL progress
-which is available at `http://server_url/datasites/<aggregator_email>/public/browser_history_agg/`
+- Once the aggregator app is running, every clients could visit the aggregator's dashboard showing the results. It will be available at `http://server_url/datasites/<aggregator_email>/public/browser_history_agg/`
 
 The `server_url` depends on which the server the client is running on.
 - `syftbox.openmined.org` (for the public server)
@@ -76,7 +75,7 @@ Get in touch with your learning mate and start learning together!
 
 ### Requirements
 - It requires giving to Terminal "Full Disk Access" (if you read the code, you will see why). 
-- SyftBox is required to run the app.
+- [SyftBox](https://github.com/OpenMined/syft) is required to run the app.
 
 ### Prerequisites
 - python 3.8+ 
