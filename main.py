@@ -155,7 +155,7 @@ def get_score_from_browser_history_hashes(
             datasites_path
             / peer
             / "api_data"
-            / "browser_history"
+            / API_NAME
             / "browser_history_enc.json"
         )
         if not tracker_file.exists():
