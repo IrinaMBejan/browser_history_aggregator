@@ -1,1 +1,1 @@
-syftbox
+syftbox==0.2.11

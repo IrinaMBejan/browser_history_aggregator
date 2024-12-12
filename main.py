@@ -235,23 +235,6 @@ def get_top_papers(
 
     for peer in peers:
         tracker_file: Path = (
-            datasites_path
-            / peer
-            / "api_data"
-            / "browser_history"
-            / "browser_history_enc.json"
-        )
-        if not tracker_file.exists():
-            continue
-
-        with open(str(tracker_file), "r") as json_file:
-            try:
-                peer_data = json.load(json_file)
-            except json.JSONDecodeError:
-                continue
-
-    for peer in peers:
-        tracker_file: Path = (
             datasites_path / peer / "api_data" / API_NAME / "paper_stats.json"
         )
         if not tracker_file.exists():
@@ -292,7 +275,7 @@ def copy_html_files(source: Path, destination: Path):
         if item.is_file():
             target = destination / item.name
             try:
-                os.rename(item, target)
+                shutil.copy2(item, target)
             except Exception as e:
                 print(f"Error moving file {item} to {target}: {e}")
 
@@ -374,5 +357,6 @@ if __name__ == "__main__":
         / "outputs"
         / "output_top_papers.json"
     )
+
     with open(output_top_papers, "w") as f:
         json.dump(top_papers, f)

@@ -1,6 +1,7 @@
 let top_domains_file = './outputs/output_most_viewed_domains.json'
 let similarity_file = './outputs/output_similarity.json'
 let peers_file = './outputs/output_peers.json'
+let top_papers_list = './outputs/output_top_papers.json'
 
 fetch(top_domains_file)
     .then(response => response.json())
@@ -76,23 +77,95 @@ fetch(peers_file)
     })
     .catch(error => console.error('Error loading peers:', error));
 
-fetch(peers_file)
-    .then(response => response.json())
-    .then(peers => {
-        const activeBadge = document.querySelector('.active-badge');
-        activeBadge.textContent = `${peers.length} Active Learners`;
-    })
-    .catch(error => console.error('Error loading peers:', error));
-
-
-let similarityData = null;
-fetch(similarity_file)
+fetch(top_papers_list)
     .then(response => response.json())
     .then(data => {
-        similarityData = data;
-        setupSearch();
+        const filteredData = data.filter(([url]) => !url.includes('profile'));
+        
+        const container = document.createElement('div');
+        const header = document.createElement('div');
+        header.className = 'flex justify-between items-center mb-4';
+        
+        const title = document.createElement('h2');
+        title.className = 'text-xl font-semibold text-white';
+        title.textContent = 'Top Research Papers';
+        
+        const badge = document.createElement('div');
+        badge.className = 'papers-badge badge';
+        badge.textContent = `${filteredData.length} Papers`;
+        
+        header.appendChild(title);
+        header.appendChild(badge);
+
+        const list = document.createElement('ul');
+        list.className = 'space-y-2';
+
+        filteredData.forEach(([url, count]) => {
+            if (!url) return;
+            
+            const li = document.createElement('li');
+            li.className = 'learner-card hover:bg-gray-700 transition-all';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'flex justify-between items-center gap-4';
+            
+            const leftSection = document.createElement('div');
+            leftSection.className = 'flex flex-col min-w-0 flex-1'; 
+            
+            const link = document.createElement('a');
+            link.href = `https://${url}`;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'hover:text-blue-400 transition-colors truncate'; 
+            
+            const domain = url.split('/')[0];
+            const domainSpan = document.createElement('span');
+            domainSpan.className = 'font-medium text-white truncate'; 
+            domainSpan.textContent = domain;
+            
+            const path = '/' + url.split('/').slice(1).join('/');
+            const pathSpan = document.createElement('span');
+            pathSpan.className = 'text-muted text-sm mt-1 truncate'; 
+            pathSpan.textContent = path;
+            
+            const countBadge = document.createElement('span');
+            countBadge.className = 'badge match-badge whitespace-nowrap';
+            countBadge.textContent = `${count} visits`;
+            
+            link.appendChild(domainSpan);
+            link.appendChild(pathSpan);
+            leftSection.appendChild(link);
+            
+            contentDiv.appendChild(leftSection);
+            contentDiv.appendChild(countBadge);
+            li.appendChild(contentDiv);
+            list.appendChild(li);
+        });
+
+        container.appendChild(header);
+        container.appendChild(list);
+
+        const papersList = document.getElementById('papersList');
+        if (papersList) {
+            papersList.appendChild(container);
+        }
     })
-    .catch(error => console.error('Error loading similarity data:', error));
+    .catch(error => {
+        console.error('Error loading the papers data:', error);
+        const papersList = document.getElementById('papersList');
+        if (papersList) {
+            const errorContainer = document.createElement('div');
+            errorContainer.className = 'max-w-4xl mx-auto p-6';
+            errorContainer.innerHTML = `
+                <div class="card mb-6">
+                    <div class="text-red-500">Error loading papers list</div>
+                </div>
+            `;
+            papersList.parentNode.replaceChild(errorContainer, papersList);
+        }
+    });
+
+let similarityData = null;
 
 function findSimilarUsers(email) {
     if (!similarityData || !similarityData[email]) {
@@ -111,6 +184,12 @@ function findSimilarUsers(email) {
 
 function renderResults(searchTerm) {
     const learnersContainer = document.getElementById('learnersList');
+    
+    if (!learnersContainer) {
+        console.error('Learners list container not found');
+        return;
+    }
+    
     learnersContainer.innerHTML = '';
 
     if (!searchTerm) {
@@ -142,14 +221,43 @@ function renderResults(searchTerm) {
 
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
-    searchInput.placeholder = "Search your email...  ";
+    
+    if (!searchInput) {
+        console.error('Search input not found');
+        return;
+    }
+    
+    searchInput.placeholder = "Search your email...";
 
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            renderResults(e.target.value.trim());
-            console.log(e.target.value.trim());
+            const searchTerm = e.target.value.trim();
+            renderResults(searchTerm);
+            console.log('Searching for:', searchTerm);
         }
     });
 
     renderResults('');
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetch(similarity_file)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            similarityData = data;
+            setupSearch();
+            console.log('Similarity data loaded');
+        })
+        .catch(error => {
+            console.error('Error loading similarity data:', error);
+            const learnersContainer = document.getElementById('learnersList');
+            if (learnersContainer) {
+                learnersContainer.innerHTML = '<div class="text-red-500 p-4">Error loading similarity data</div>';
+            }
+        });
+});
